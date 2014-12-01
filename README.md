@@ -1,4 +1,4 @@
-WarcInputformatReader
+CommonCrawl-Common
 =====================
 
-Warc Input format Reader for Map Reduce and Apache Spark
+The Common Classes shared betweeen CommonCrawl-MapReduce and CommonCrawl-Spark
