@@ -18,6 +18,10 @@ package com.synerzip.analytics.commoncrawl.googleads.parser;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.log4j.Logger;
 
 /**
  * 
@@ -30,6 +34,9 @@ import java.util.StringTokenizer;
 public class DefaultParser implements GoogleAdParser {
 
 	private static final Map<String, String> map = new HashMap<String, String>();
+	private static final Logger LOG = Logger.getLogger(DefaultParser.class);
+	private static final Pattern pattern = Pattern
+			.compile("(?://.*)|(/\\*(?:.|[\\n\\r])*?\\*/)");
 
 	/**
 	 * Create a Parser from given googleAdScript
@@ -39,15 +46,35 @@ public class DefaultParser implements GoogleAdParser {
 		// FIXME - Instead of regular expression, lets us JavaScript Interpreter
 		// and pass some predefined values for window.width, window.height etc
 
-		String substr = googleAdScript
-				.substring(5, googleAdScript.length() - 5).replaceAll(
-						"(?://.*)|(/\\*(?:.|[\\n\\r])*?\\*/)", "");
+		LOG.debug("Parsing Advt");
+
+		int googleAdScriptLength = googleAdScript.length();
+
+		//FIXME - This is marginal better, fails at later stage but still fails
+		/*String scriptCode = googleAdScript.substring(5,
+				googleAdScriptLength - 5);
+		
+		Matcher match = pattern.matcher(scriptCode);
+		StringBuilder sb = new StringBuilder();
+		while(match.find()){
+			sb.append(match.replaceAll(""));
+		}
+		String substr = sb.toString();*/
+		
+		//FIXME - temporary solution to find rougue data that was crashing MR job
+		String substr="";
+		try {
+			substr = googleAdScript.substring(5, googleAdScriptLength - 5)
+					.replaceAll("(?://.*)|(/\\*(?:.|[\\n\\r])*?\\*/)", "");
+		} catch (StackOverflowError e) {
+			LOG.error("StackOverflow** "+googleAdScript,e);
+		//	e.printStackTrace();
+		}
 
 		StringTokenizer tokenizer = new StringTokenizer(substr, ";");
 		while (tokenizer.hasMoreTokens()) {
 			String subToken = tokenizer.nextToken().replaceAll("(\\r|\\n)", "")
 					.replaceAll("\"", "");
-			
 
 			StringTokenizer subTokenizer = new StringTokenizer(subToken, "=");
 
